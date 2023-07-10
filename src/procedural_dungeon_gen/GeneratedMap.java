@@ -1,6 +1,5 @@
 package procedural_dungeon_gen;
 
-import java.awt.Point;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -104,8 +103,7 @@ public class GeneratedMap {
 	private void createRooms() {
 
 		// randomly chooses dimensions for the first placed room, looping until the
-		// dimensions are valid
-		// and can be placed
+		// dimensions are valid and can be placed
 		Point seedRoomTopLeft = new Point(), seedRoomBotRight = new Point();
 		do {
 			seedRoomTopLeft.x = rand.nextInt(mapWidth);
@@ -115,9 +113,66 @@ public class GeneratedMap {
 
 		} while (!canPlaceRoom(seedRoomTopLeft, seedRoomBotRight));
 
+		// places 'seed' room
 		Room seedRoom = placeRoom(seedRoomTopLeft, seedRoomBotRight);
-
 		rooms.add(seedRoom);
+
+		placeRoomsAround(seedRoom);
+
+	}
+
+	/**
+	 * This is a recursive method that populates the map with random rooms. It does this by
+	 * checking for non-occupied cells around the dimensions of the room, and randomly choosing
+	 * dimensions on the rooms created, and then calling itself on those said rooms.
+	 * 
+	 * @param room Room that other rooms should be placed around
+	 */
+	private void placeRoomsAround(Room room) {
+		Point topLeft = room.getTopLeftPos();
+		Point botRight = room.getBotRightPos();
+
+		// handles generating rooms above current room
+		if (topLeft.y > 0) {
+
+			// iterates through cells above room
+			for (int x = topLeft.x; x <= botRight.x; x++) {
+				
+				if (mapGrid[topLeft.y - 1][x].equals(Cell.PROCESSED)) {
+					
+					Point newTopLeft = new Point(), newBotRight = new Point();
+					// if cell is processed -- meaning it's not empty or part of a room,
+					// create random dimensions for a room until one fits
+					do {
+						
+						int newRoomWidth = rand.nextInt(maxRoomWidth) + 1;
+						// horizontal offset that the top left corner of the new room should have
+						// compared to the "entrance" cell from the current room
+						int horizontalOffset = rand.nextInt(newRoomWidth);
+						
+						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
+
+						newTopLeft.x = x - horizontalOffset;
+						newTopLeft.y = topLeft.y - newRoomHeight;
+
+						newBotRight.x = x + newRoomWidth - 1;
+						newBotRight.y = topLeft.y - 1;
+
+					} while (!canPlaceRoom(newTopLeft, newBotRight));
+
+					Room newRoom = placeRoom(newTopLeft, newBotRight);
+
+					// adds connections so that the rooms can be traversed
+					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y - 1));
+					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y));
+
+					rooms.add(newRoom);
+
+					// recursively places rooms around the new room
+					placeRoomsAround(newRoom);
+				}
+			}
+		}
 	}
 
 	/**

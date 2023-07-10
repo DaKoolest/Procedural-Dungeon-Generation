@@ -13,6 +13,8 @@ public class Room {
 	private Point topLeftPos;
 	private Point botRightPos;
 	private Color color;
+	// stores connecting rooms as a pair, where the Room is the connected room,
+	// and point is the cell from the current room where the "doorway" is attached
 	private ArrayList<Pair<Room, Point>> connectedRooms = new ArrayList<>();
 	
 	public Room(Point topLeftPos, Point botRightPos) {
