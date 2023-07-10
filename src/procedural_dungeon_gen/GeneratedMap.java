@@ -29,12 +29,10 @@ public class GeneratedMap {
 	// the percent of the map that should be empty
 	private final float percentEmpty;
 
-	// max width and height of empty spaces that can be generated (technically can
-	// be bigger when two empty spaces generate next to each other)
-	private final int maxEmptyWidth, maxEmptyHeight;
+	// max width and height of empty spaces and rooms that can be generated
+	private final int maxEmptyWidth, maxEmptyHeight, maxRoomWidth, maxRoomHeight;
 
 	private Random rand = new Random();
-
 	/**
 	 * Creates a new, unprocessed generated map.
 	 * 
@@ -48,6 +46,8 @@ public class GeneratedMap {
 		percentEmpty = 0.35f;
 		maxEmptyWidth = 2;
 		maxEmptyHeight = 2;
+		maxRoomWidth = 4;
+		maxRoomHeight = 3;
 
 		this.mapGrid = new Cell[mapHeight][mapWidth];
 	}
@@ -61,13 +61,18 @@ public class GeneratedMap {
 	 * @param maxEmptyWidth Max width of empty cell rectangle
 	 * @param maxEmptyHeight Max height of empty cell rectangle
 	 */
-	public GeneratedMap(int mapWidth, int mapHeight, float percentEmpty, int maxEmptyWidth, int maxEmptyHeight) {
+	public GeneratedMap(int mapWidth, int mapHeight, float percentEmpty, int maxEmptyWidth, int maxEmptyHeight,
+		int maxRoomWidth, int maxRoomHeight) {
+
 		this.mapWidth = mapWidth;
 		this.mapHeight = mapHeight;
 
 		this.percentEmpty = percentEmpty;
 		this.maxEmptyWidth = maxEmptyWidth;
 		this.maxEmptyHeight = maxEmptyHeight;
+
+		this.maxRoomWidth = maxRoomWidth;
+		this.maxRoomHeight = maxRoomHeight;
 
 		this.mapGrid = new Cell[mapHeight][mapWidth];
 	}
@@ -76,7 +81,43 @@ public class GeneratedMap {
 	 * Generates a new layout of rooms and empty cells
 	 */
 	public void generateMap() {
+		// populates map with empty cells
 		createEmptyCells();
+
+		// populates non-empty cells with rooms
+		createRooms();
+	}
+
+	/**
+	 * Populates non-empty cells with rooms of varying sizes
+	 */
+	private void createRooms() {
+
+		// randomly chooses dimensions for the first placed room, looping until the dimensions are valid
+		// and can be placed
+		Point seedRoomTopLeft = new Point(), seedRoomBotRight = new Point();
+		do {
+			seedRoomTopLeft.x = rand.nextInt(mapWidth);
+			seedRoomTopLeft.y = rand.nextInt(mapHeight);
+
+			seedRoomBotRight.x = seedRoomTopLeft.x + rand.nextInt(maxRoomWidth);
+			seedRoomBotRight.y = seedRoomTopLeft.y + rand.nextInt(maxRoomHeight);
+
+		} while (!canPlaceRoom(seedRoomTopLeft, seedRoomBotRight));
+
+		Room seedRoom = placeRoom(seedRoomTopLeft, seedRoomBotRight);
+	}
+
+	/**
+	 * Places a room at the given position, creating a new Room object and updating the cells in mapGrid
+	 * 
+	 * @param topLeft Top left corner of the rectangle to be placed
+	 * @param botRight Bottom right corner of the rectangle to be placed
+	 * @return A new room that was placed at the given position
+	 */
+	private Room placeRoom(Point topLeft, Point botRight) {
+		fillGrid(topLeft, botRight, Cell.ROOM);
+		return new Room(topLeft, botRight);
 	}
 
 	/**
@@ -143,8 +184,7 @@ public class GeneratedMap {
 		}
 
 		if (numCellsReachable(startPnt.x, startPnt.y) == totalUnprocessedCells) {
-			// if the number of cells reachable from startPnt is equal to the total
-			// unprocessed
+			// if the number of cells reachable from startPnt is equal to the total unprocessed
 			// cells, return true
 			return true;
 		}
