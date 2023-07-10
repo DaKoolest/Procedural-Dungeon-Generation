@@ -2,6 +2,11 @@ package procedural_dungeon_gen;
 
 import java.awt.Point;
 import java.util.Random;
+import java.util.ArrayList;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
  * Represents a generated map in the form of a grid where each unit is
@@ -21,18 +26,22 @@ import java.util.Random;
 public class GeneratedMap {
 
 	// represents a cell in the generated map
-	private enum Cell { UNPROCESSED, PROCESSED, EMPTY, ROOM }
+	private enum Cell {
+		UNPROCESSED, PROCESSED, EMPTY, ROOM
+	}
 
-	private final int mapWidth, mapHeight;
+	private int mapWidth, mapHeight;
 	private Cell mapGrid[][];
+	private ArrayList<Room> rooms;
 
 	// the percent of the map that should be empty
-	private final float percentEmpty;
+	private float percentEmpty;
 
 	// max width and height of empty spaces and rooms that can be generated
-	private final int maxEmptyWidth, maxEmptyHeight, maxRoomWidth, maxRoomHeight;
+	private int maxEmptyWidth, maxEmptyHeight, maxRoomWidth, maxRoomHeight;
 
 	private Random rand = new Random();
+
 	/**
 	 * Creates a new, unprocessed generated map.
 	 * 
@@ -55,14 +64,14 @@ public class GeneratedMap {
 	/**
 	 * Creates a new, unprocessed generated map.
 	 * 
-	 * @param mapWidth     Width of the generated map
-	 * @param mapHeight    Height of the generated map
-	 * @param percentEmpty percentEmpty Percent of map that should be empty cells
-	 * @param maxEmptyWidth Max width of empty cell rectangle
+	 * @param mapWidth       Width of the generated map
+	 * @param mapHeight      Height of the generated map
+	 * @param percentEmpty   percentEmpty Percent of map that should be empty cells
+	 * @param maxEmptyWidth  Max width of empty cell rectangle
 	 * @param maxEmptyHeight Max height of empty cell rectangle
 	 */
 	public GeneratedMap(int mapWidth, int mapHeight, float percentEmpty, int maxEmptyWidth, int maxEmptyHeight,
-		int maxRoomWidth, int maxRoomHeight) {
+			int maxRoomWidth, int maxRoomHeight) {
 
 		this.mapWidth = mapWidth;
 		this.mapHeight = mapHeight;
@@ -81,6 +90,7 @@ public class GeneratedMap {
 	 * Generates a new layout of rooms and empty cells
 	 */
 	public void generateMap() {
+		rooms = new ArrayList<>();
 		// populates map with empty cells
 		createEmptyCells();
 
@@ -93,25 +103,28 @@ public class GeneratedMap {
 	 */
 	private void createRooms() {
 
-		// randomly chooses dimensions for the first placed room, looping until the dimensions are valid
+		// randomly chooses dimensions for the first placed room, looping until the
+		// dimensions are valid
 		// and can be placed
 		Point seedRoomTopLeft = new Point(), seedRoomBotRight = new Point();
 		do {
 			seedRoomTopLeft.x = rand.nextInt(mapWidth);
 			seedRoomTopLeft.y = rand.nextInt(mapHeight);
-
 			seedRoomBotRight.x = seedRoomTopLeft.x + rand.nextInt(maxRoomWidth);
 			seedRoomBotRight.y = seedRoomTopLeft.y + rand.nextInt(maxRoomHeight);
 
 		} while (!canPlaceRoom(seedRoomTopLeft, seedRoomBotRight));
 
 		Room seedRoom = placeRoom(seedRoomTopLeft, seedRoomBotRight);
+
+		rooms.add(seedRoom);
 	}
 
 	/**
-	 * Places a room at the given position, creating a new Room object and updating the cells in mapGrid
+	 * Places a room at the given position, creating a new Room object and updating
+	 * the cells in mapGrid
 	 * 
-	 * @param topLeft Top left corner of the rectangle to be placed
+	 * @param topLeft  Top left corner of the rectangle to be placed
 	 * @param botRight Bottom right corner of the rectangle to be placed
 	 * @return A new room that was placed at the given position
 	 */
@@ -184,7 +197,8 @@ public class GeneratedMap {
 		}
 
 		if (numCellsReachable(startPnt.x, startPnt.y) == totalUnprocessedCells) {
-			// if the number of cells reachable from startPnt is equal to the total unprocessed
+			// if the number of cells reachable from startPnt is equal to the total
+			// unprocessed
 			// cells, return true
 			return true;
 		}
@@ -227,13 +241,15 @@ public class GeneratedMap {
 	}
 
 	/**
-	 * Checks if a room/rectangle of cells can be placed without overlapping another room
+	 * Checks if a room/rectangle of cells can be placed without overlapping another
+	 * room
 	 * 
-	 * @param topLeft Top left corner of the rectangle to be placed
+	 * @param topLeft  Top left corner of the rectangle to be placed
 	 * @param botRight Bottom right corner of the rectangle to be placed
 	 * @return True if a room with corners at positions topLeft and bottomRight can
-	 * be placed without overlapping other processed cells and is in bounds, false
-	 * if not.
+	 *         be placed without overlapping other processed cells and is in bounds,
+	 *         false
+	 *         if not.
 	 */
 	private boolean canPlaceRoom(Point topLeft, Point botRight) {
 		if (isRoomInBounds(topLeft, botRight)) {
@@ -241,7 +257,7 @@ public class GeneratedMap {
 			for (int y = topLeft.y; y <= botRight.y; y++) {
 				for (int x = topLeft.x; x <= botRight.x; x++) {
 					Cell val = mapGrid[y][x];
-					
+
 					// checks that every cell in room to be placed does not contain and empty
 					// or room cell
 					if (!(val.equals(Cell.UNPROCESSED)) && !val.equals(Cell.PROCESSED))
@@ -258,7 +274,7 @@ public class GeneratedMap {
 	/**
 	 * Checks if a room would be in bounds if placed
 	 * 
-	 * @param topLeft Top left corner of the rectangle to be placed
+	 * @param topLeft  Top left corner of the rectangle to be placed
 	 * @param botRight Bottom right corner of the rectangle to be placed
 	 * @return True if both corners are in bounds, false if not
 	 */
@@ -279,9 +295,10 @@ public class GeneratedMap {
 	 * Fills the cells in rectangle from topLeft to botRight on the grid with a
 	 * specified Cell enum value.
 	 * 
-	 * @param topLeft Top left corner of the rectangle to be placed
+	 * @param topLeft  Top left corner of the rectangle to be placed
 	 * @param botRight Bottom right corner of the rectangle to be placed
-	 * @param val The Cell enum value that the rectangle of cells should be set to
+	 * @param val      The Cell enum value that the rectangle of cells should be set
+	 *                 to
 	 */
 	private void fillGrid(Point topLeft, Point botRight, Cell val) {
 		for (int y = topLeft.y; y <= botRight.y; y++) {
@@ -292,7 +309,8 @@ public class GeneratedMap {
 	}
 
 	/**
-	 * Draws map in console, where '~' represents an UNPROCESSED cell, 'O' represents a PROCESSED
+	 * Draws map in console, where '~' represents an UNPROCESSED cell, 'O'
+	 * represents a PROCESSED
 	 * cell, 'X' represents an EMPTY cell, and 'R' represents a ROOM cell
 	 */
 	public void drawInConsole() {
@@ -300,21 +318,74 @@ public class GeneratedMap {
 			for (int x = 0; x < mapWidth; x++) {
 				switch (mapGrid[y][x]) {
 
-				case UNPROCESSED:
-					System.out.print("~");
-					break;
-				case PROCESSED:
-					System.out.print("O");
-					break;
-				case EMPTY:
-					System.out.print("X");
-					break;
-				case ROOM:
-					System.out.print("R");
-					break;
+					case UNPROCESSED:
+						System.out.print("~");
+						break;
+					case PROCESSED:
+						System.out.print("O");
+						break;
+					case EMPTY:
+						System.out.print("X");
+						break;
+					case ROOM:
+						System.out.print("R");
+						break;
 				}
 			}
 			System.out.println();
 		}
+	}
+
+	/**
+	 * Displays the map using colored rectangles to represent, opening a new window.
+	 * Cells are represented as 2D tiles on a grid.
+	 * 
+	 * @param tileWidth   Width of the tile in pixels
+	 * @param tileHeight  Height of the tile in pixels
+	 * @param borderWidth Border around rooms in pixels
+	 * @param pixelSize   Scale of the pixel size
+	 */
+	public void displayMapImage(int tileWidth, int tileHeight, int borderWidth, int pixelSize) {
+
+		tileWidth *= pixelSize;
+		tileHeight *= pixelSize;
+		borderWidth *= pixelSize;
+
+		int imageWidth = tileWidth * mapWidth;
+		int imageHeight = tileHeight * mapHeight;
+
+		// image that will be displayed
+		BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = image.createGraphics();
+
+		// sets background of image to white
+		graphics.setColor(Color.WHITE);
+		graphics.fillRect(0, 0, imageWidth, imageHeight);
+
+		// iterates through each room drawing them as a rectangle from the top left to bottom right of the tile
+		for (Room room : rooms) {
+			Point topLeft = room.getTopLeftPos();
+			Point botRight = room.getBotRightPos();
+
+			int roomWidth = botRight.x - topLeft.x + 1;
+			int roomHeight = botRight.y - topLeft.y + 1;
+
+			graphics.setColor(room.getColor());
+
+			graphics.fillRect(topLeft.x * tileWidth + borderWidth, topLeft.y * tileHeight + borderWidth,
+					roomWidth * tileWidth - 2 * borderWidth, roomHeight * tileHeight - 2 * borderWidth);
+		}
+
+		graphics.dispose();
+
+		// creates window to be displayed
+		JFrame frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(imageWidth, imageHeight);
+		frame.getContentPane().add(new JLabel(new ImageIcon(image)));
+
+		frame.pack();
+
+		frame.setVisible(true);
 	}
 }
