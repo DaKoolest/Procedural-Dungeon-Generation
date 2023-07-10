@@ -7,6 +7,6 @@ public class Main {
 		map.generateMap();
 		map.drawInConsole();
 
-		map.displayMapImage(9, 7, 1, 8);
+		map.displayMapImage(9, 7, 8);
 	}  
 }

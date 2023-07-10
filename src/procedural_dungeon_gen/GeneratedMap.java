@@ -2,8 +2,8 @@ package procedural_dungeon_gen;
 
 import java.util.Random;
 import java.util.ArrayList;
-
 import javax.swing.*;
+import procedural_dungeon_gen.Room.Direction;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -163,8 +163,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y - 1));
-					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y));
+					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y - 1), Direction.DOWN);
+					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y), Direction.UP);
 
 					rooms.add(newRoom);
 
@@ -397,14 +397,12 @@ public class GeneratedMap {
 	 * 
 	 * @param tileWidth   Width of the tile in pixels
 	 * @param tileHeight  Height of the tile in pixels
-	 * @param borderWidth Border around rooms in pixels
 	 * @param pixelSize   Scale of the pixel size
 	 */
-	public void displayMapImage(int tileWidth, int tileHeight, int borderWidth, int pixelSize) {
+	public void displayMapImage(int tileWidth, int tileHeight, int pixelSize) {
 
 		tileWidth *= pixelSize;
 		tileHeight *= pixelSize;
-		borderWidth *= pixelSize;
 
 		int imageWidth = tileWidth * mapWidth;
 		int imageHeight = tileHeight * mapHeight;
@@ -427,8 +425,38 @@ public class GeneratedMap {
 
 			graphics.setColor(room.getColor());
 
-			graphics.fillRect(topLeft.x * tileWidth + borderWidth, topLeft.y * tileHeight + borderWidth,
-					roomWidth * tileWidth - 2 * borderWidth, roomHeight * tileHeight - 2 * borderWidth);
+			graphics.fillRect(topLeft.x * tileWidth + pixelSize, topLeft.y * tileHeight + pixelSize,
+					roomWidth * tileWidth - 2 * pixelSize, roomHeight * tileHeight - 2 * pixelSize);
+			
+			// draws doorways
+			graphics.setColor(Color.MAGENTA);
+			
+			for (Room.Doorway door: room.getDoors()) {
+				Point entrance = door.getEntrance();
+				switch (door.directionFacing()) {
+				
+				case UP:
+					graphics.fillRect(entrance.x * tileWidth + tileWidth/2 - pixelSize/2,
+							topLeft.y * tileHeight, pixelSize, pixelSize);
+					break;
+					
+				case DOWN:
+					graphics.fillRect(entrance.x * tileWidth + tileWidth/2 - pixelSize/2,
+							(topLeft.y + roomHeight) * tileHeight - pixelSize, pixelSize, pixelSize);
+					break;
+					
+				case LEFT:
+					graphics.fillRect(topLeft.x * tileWidth,
+							entrance.y * tileHeight + tileHeight/2 - pixelSize/2, pixelSize, pixelSize);
+					break;
+					
+				case RIGHT:
+					graphics.fillRect((topLeft.x + roomWidth) * tileWidth - pixelSize,
+							entrance.y * tileHeight + tileHeight/2 - pixelSize/2, pixelSize, pixelSize);
+					break;
+				
+				}	
+			}
 		}
 
 		graphics.dispose();
