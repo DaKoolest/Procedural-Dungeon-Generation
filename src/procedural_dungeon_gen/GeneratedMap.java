@@ -295,7 +295,7 @@ public class GeneratedMap {
 	 * Draws map in console, where '~' represents an UNPROCESSED cell, 'O' represents a PROCESSED
 	 * cell, 'X' represents an EMPTY cell, and 'R' represents a ROOM cell
 	 */
-	public void draw() {
+	public void drawInConsole() {
 		for (int y = 0; y < mapHeight; y++) {
 			for (int x = 0; x < mapWidth; x++) {
 				switch (mapGrid[y][x]) {
