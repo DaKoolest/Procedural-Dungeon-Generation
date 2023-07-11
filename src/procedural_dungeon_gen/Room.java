@@ -29,11 +29,12 @@ public class Room {
 	 * 
 	 * @param topLeftPos Top left corner of room
 	 * @param botRightPos Bottom right corner of room
+	 * @param color Color of room
 	 */
-	public Room(Point topLeftPos, Point botRightPos) {
+	public Room(Point topLeftPos, Point botRightPos, Color color) {
 		this.topLeftPos = topLeftPos;
 		this.botRightPos = botRightPos; 
-		color = Color.RED;
+		this.color = color;
 	}
 	
 	public Point getTopLeftPos() {
