@@ -51,8 +51,8 @@ public class GeneratedMap {
 		this.mapWidth = mapWidth;
 		this.mapHeight = mapHeight;
 
-		percentEmpty = 0.35f;
-		maxEmptyWidth = 2;
+		percentEmpty = 0.25f;
+		maxEmptyWidth = 3;
 		maxEmptyHeight = 2;
 		maxRoomWidth = 3;
 		maxRoomHeight = 3;
@@ -132,6 +132,91 @@ public class GeneratedMap {
 		Point topLeft = room.getTopLeftPos();
 		Point botRight = room.getBotRightPos();
 
+
+		// handles generating rooms to the left of current room
+		if (topLeft.x > 0) {
+
+			// iterates through cells above room
+			for (int y = topLeft.y; y <= botRight.y; y++) {
+				
+				if (mapGrid[y][topLeft.x - 1].equals(Cell.PROCESSED)) {
+					
+					Point newTopLeft = new Point(), newBotRight = new Point();
+					// if cell is processed -- meaning it's not empty or part of a room,
+					// create random dimensions for a room until one fits
+					do {
+						
+						int newRoomWidth = rand.nextInt(maxRoomWidth) + 1;
+						
+						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
+						// horizontal offset that the top left corner of the new room should have
+						// compared to the "entrance" cell from the current room
+						int verticalOffset = rand.nextInt(newRoomHeight);
+
+						newTopLeft.x = topLeft.x - newRoomWidth;
+						newTopLeft.y = y - verticalOffset;
+
+						newBotRight.x = topLeft.x - 1;
+						newBotRight.y = y + newRoomHeight - 1;
+
+					} while (!canPlaceRoom(newTopLeft, newBotRight));
+
+					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
+
+					// adds connections so that the rooms can be traversed
+					newRoom.addConnectedRoom(room, new Point(topLeft.x - 1, y), Direction.RIGHT);
+					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.LEFT);
+
+					rooms.add(newRoom);
+
+					// recursively places rooms around the new room
+					placeRoomsAround(newRoom);
+				}
+			}
+		}
+
+		// handles generating rooms to the right of current room
+		if (botRight.x < mapWidth - 1) {
+
+			// iterates through cells above room
+			for (int y = topLeft.y; y <= botRight.y; y++) {
+				
+				if (mapGrid[y][botRight.x + 1].equals(Cell.PROCESSED)) {
+					
+					Point newTopLeft = new Point(), newBotRight = new Point();
+					// if cell is processed -- meaning it's not empty or part of a room,
+					// create random dimensions for a room until one fits
+					do {
+						
+						int newRoomWidth = rand.nextInt(maxRoomWidth) + 1;
+						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
+
+						// horizontal offset that the top left corner of the new room should have
+						// compared to the "entrance" cell from the current room
+						int verticalOffset = rand.nextInt(newRoomHeight);
+
+						newTopLeft.x = botRight.x + 1;
+						newTopLeft.y = y - verticalOffset;
+
+						newBotRight.x = botRight.x + newRoomWidth;
+						newBotRight.y = y + newRoomHeight - 1;
+
+					} while (!canPlaceRoom(newTopLeft, newBotRight));
+
+					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
+
+					// adds connections so that the rooms can be traversed
+					newRoom.addConnectedRoom(room, new Point(topLeft.x + 1, y), Direction.LEFT);
+					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.RIGHT);
+
+					rooms.add(newRoom);
+
+					// recursively places rooms around the new room
+					placeRoomsAround(newRoom);
+				}
+			}
+		}
+		
 		// handles generating rooms above current room
 		if (topLeft.y > 0) {
 
@@ -207,90 +292,6 @@ public class GeneratedMap {
 					// adds connections so that the rooms can be traversed
 					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y + 1), Direction.UP);
 					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y), Direction.DOWN);
-
-					rooms.add(newRoom);
-
-					// recursively places rooms around the new room
-					placeRoomsAround(newRoom);
-				}
-			}
-		}
-		
-		// handles generating rooms to the left of current room
-		if (topLeft.x > 0) {
-
-			// iterates through cells above room
-			for (int y = topLeft.y; y <= botRight.y; y++) {
-				
-				if (mapGrid[y][topLeft.x - 1].equals(Cell.PROCESSED)) {
-					
-					Point newTopLeft = new Point(), newBotRight = new Point();
-					// if cell is processed -- meaning it's not empty or part of a room,
-					// create random dimensions for a room until one fits
-					do {
-						
-						int newRoomWidth = rand.nextInt(maxRoomWidth) + 1;
-						
-						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
-						// horizontal offset that the top left corner of the new room should have
-						// compared to the "entrance" cell from the current room
-						int verticalOffset = rand.nextInt(maxRoomHeight);
-
-						newTopLeft.x = topLeft.x - newRoomWidth;
-						newTopLeft.y = y - verticalOffset;
-
-						newBotRight.x = topLeft.x - 1;
-						newBotRight.y = y + newRoomHeight - 1;
-
-					} while (!canPlaceRoom(newTopLeft, newBotRight));
-
-					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
-
-					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x - 1, y), Direction.RIGHT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.LEFT);
-
-					rooms.add(newRoom);
-
-					// recursively places rooms around the new room
-					placeRoomsAround(newRoom);
-				}
-			}
-		}
-
-		// handles generating rooms to the right of current room
-		if (botRight.x < mapWidth - 1) {
-
-			// iterates through cells above room
-			for (int y = topLeft.y; y <= botRight.y; y++) {
-				
-				if (mapGrid[y][botRight.x + 1].equals(Cell.PROCESSED)) {
-					
-					Point newTopLeft = new Point(), newBotRight = new Point();
-					// if cell is processed -- meaning it's not empty or part of a room,
-					// create random dimensions for a room until one fits
-					do {
-						
-						int newRoomWidth = rand.nextInt(maxRoomWidth) + 1;
-						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
-
-						// horizontal offset that the top left corner of the new room should have
-						// compared to the "entrance" cell from the current room
-						int verticalOffset = rand.nextInt(newRoomHeight);
-
-						newTopLeft.x = botRight.x + 1;
-						newTopLeft.y = y - verticalOffset;
-
-						newBotRight.x = botRight.x + newRoomHeight;
-						newBotRight.y = y + newRoomHeight - 1;
-
-					} while (!canPlaceRoom(newTopLeft, newBotRight));
-
-					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
-
-					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x + 1, y), Direction.LEFT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.RIGHT);
 
 					rooms.add(newRoom);
 
