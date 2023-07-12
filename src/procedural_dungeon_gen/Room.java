@@ -44,9 +44,17 @@ public class Room {
 	public Point getBotRightPos() {
 		return botRightPos;
 	}
-	
+
+	public int getArea() {
+		return (botRightPos.x - topLeftPos.x + 1) * (botRightPos.y - topLeftPos.y + 1);
+	}
+
 	public Color getColor() {
 		return color;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
 	}
 
 	/**
@@ -98,6 +106,10 @@ public class Room {
 		
 		public Direction directionFacing() {
 			return dir;
+		}
+
+		public Room getConnectingRoom() {
+			return connectingRoom;
 		}
 		
 	}

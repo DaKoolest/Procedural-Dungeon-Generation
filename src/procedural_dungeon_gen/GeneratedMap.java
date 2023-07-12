@@ -4,7 +4,11 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 import javax.swing.*;
 import procedural_dungeon_gen.Room.Direction;
@@ -108,6 +112,17 @@ public class GeneratedMap {
 		// populates non-empty cells with rooms
 		createRooms();
 		System.out.println("Finished generating rooms");
+
+		Room room1, room2;
+		do {
+			room1 = rooms.get(rand.nextInt(rooms.size()));
+		 	room2 = rooms.get(rand.nextInt(rooms.size()));
+			
+		} while (room1 == room2 || room1.getArea() != 1 || room2.getArea() != 1 || findShortestDistance(room1, room2) < 35);
+
+		System.out.println("Room 1 area:" + room1.getArea() + ", Room 2 area:" + room2.getArea());
+		room1.setColor(Color.GREEN);
+		room2.setColor(Color.GREEN);
 	}
 
 	/**
@@ -564,6 +579,57 @@ public class GeneratedMap {
 			}
 		}
 	}
+
+	/**
+     * Finds the shortest distance between two rooms using BFS.
+     *
+     * @param startRoom The starting room
+     * @param targetRoom The target room
+     * @return The shortest distance between the start and target rooms, or -1 if no path exists
+     */
+    public int findShortestDistance(Room startRoom, Room targetRoom) {
+        // map to store the visited status of each room
+        Map<Room, Boolean> visited = new HashMap<>();
+        for (Room room : rooms) {
+            visited.put(room, false);
+        }
+
+        // queue for BFS traversal
+        Queue<Room> queue = new LinkedList<>();
+        // map to store the distance from the start room to each room
+        Map<Room, Integer> distance = new HashMap<>();
+
+        // initialize the starting room
+        visited.put(startRoom, true);
+        distance.put(startRoom, 0);
+        queue.add(startRoom);
+
+        while (!queue.isEmpty()) {
+            Room currentRoom = queue.poll();
+
+            if (currentRoom == targetRoom) {
+                // found the target room, return the distance
+                return distance.get(currentRoom);
+            }
+
+            // iterate through connected rooms
+            for (Room.Doorway doorway : currentRoom.getDoors()) {
+                Room adjacentRoom = doorway.getConnectingRoom();
+
+                if (!visited.get(adjacentRoom)) {
+                    // mark the adjacent room as visited
+                    visited.put(adjacentRoom, true);
+                    // update the distance
+                    distance.put(adjacentRoom, distance.get(currentRoom) + 1);
+                    // add the adjacent room to the queue for further traversal
+                    queue.add(adjacentRoom);
+                }
+            }
+        }
+
+        // no path exists between the start and target rooms
+        return -1;
+    }
 
 	/**
 	 * Draws map in console, where '~' represents an UNPROCESSED cell, 'O'
