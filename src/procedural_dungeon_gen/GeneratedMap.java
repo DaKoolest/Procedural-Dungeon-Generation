@@ -2,7 +2,9 @@ package procedural_dungeon_gen;
 
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 
 import javax.swing.*;
 import procedural_dungeon_gen.Room.Direction;
@@ -33,7 +35,8 @@ public class GeneratedMap {
 
 	private int mapWidth, mapHeight;
 	private Cell mapGrid[][];
-	private ArrayList<Room> rooms;
+	private Room mapRoomGrid[][];
+	private ArrayList<Room> rooms = new ArrayList<>();
 
 	// the percent of the map that should be empty
 	private float percentEmpty;
@@ -60,6 +63,7 @@ public class GeneratedMap {
 		maxRoomHeight = 3;
 
 		this.mapGrid = new Cell[mapHeight][mapWidth];
+		this.mapRoomGrid = new Room[mapHeight][mapWidth];
 	}
 
 	/**
@@ -85,13 +89,15 @@ public class GeneratedMap {
 		this.maxRoomHeight = maxRoomHeight;
 
 		this.mapGrid = new Cell[mapHeight][mapWidth];
+		this.mapRoomGrid = new Room[mapHeight][mapWidth];
 	}
 
 	/**
 	 * Generates a new layout of rooms and empty cells
 	 */
 	public void generateMap() {
-		rooms = new ArrayList<>();
+		rooms.clear();
+		this.mapRoomGrid = new Room[mapHeight][mapWidth];
 
 		System.out.println("Generating empty cells");
 		// populates map with empty cells
@@ -101,7 +107,7 @@ public class GeneratedMap {
 		System.out.println("Generating rooms");
 		// populates non-empty cells with rooms
 		createRooms();
-		System.out.println("Generating rooms");
+		System.out.println("Finished generating rooms");
 	}
 
 	/**
@@ -124,7 +130,48 @@ public class GeneratedMap {
 		Room seedRoom = placeRoom(seedRoomTopLeft, seedRoomBotRight, Color.BLUE);
 		rooms.add(seedRoom);
 
+		// recursively generates the rest of rooms
 		placeRoomsAround(seedRoom);
+
+		// iterates through rooms and randomly adds doorways to make dungeon less linear
+		for (Room room: rooms) {
+			
+			// 20% chance to generate an extra doorway on a room
+			if (rand.nextFloat() < 0.2f) { 
+				Point roomTopLeft = room.getTopLeftPos();
+				Point roomBotRight = room.getBotRightPos();
+				Iterator<Point> points = getAdjacentCells(roomTopLeft, roomBotRight).iterator();
+				boolean exitLoop = false;
+			
+				// iterates through adjacent rooms that room is not connected
+				while (points.hasNext() && !exitLoop) {
+					Point point = points.next();
+					
+					Room otherRoom = mapRoomGrid[point.y][point.x];
+
+					if (otherRoom != null && !room.isConnectedToRoom(otherRoom)) {
+						if (point.x < roomTopLeft.x) { // left
+							otherRoom.addConnectedRoom(room, point, Direction.RIGHT);
+							room.addConnectedRoom(otherRoom, new Point(point.x + 1, point.y), Direction.LEFT);
+
+						} else if (point.x > roomBotRight.x) { // right
+							otherRoom.addConnectedRoom(room, point, Direction.LEFT);
+							room.addConnectedRoom(otherRoom, new Point(point.x - 1, point.y), Direction.RIGHT);
+
+						} else if (point.y < roomTopLeft.y) { // above
+							otherRoom.addConnectedRoom(room, point, Direction.DOWN);
+							room.addConnectedRoom(otherRoom, new Point(point.x, point.y + 1), Direction.UP);
+
+						} else { // below
+							otherRoom.addConnectedRoom(room, point, Direction.UP);
+							room.addConnectedRoom(otherRoom, new Point(point.x, point.y - 1), Direction.DOWN);
+						}
+						exitLoop = true;
+					}
+				}
+				
+			}
+		}
 
 	}
 
@@ -139,7 +186,7 @@ public class GeneratedMap {
 		Point topLeft = room.getTopLeftPos();
 		Point botRight = room.getBotRightPos();
 
-		for (Point adjPoint: getAdjacdentCells(room.getTopLeftPos(), room.getBotRightPos())) {
+		for (Point adjPoint: getAdjacentCells(room.getTopLeftPos(), room.getBotRightPos())) {
 
 			if (adjPoint.x < topLeft.x) { // handles generating rooms to the left
 				if (mapGrid[adjPoint.y][topLeft.x - 1].equals(Cell.PROCESSED)) {
@@ -283,7 +330,13 @@ public class GeneratedMap {
 		}
 	}
 
-	private ArrayList<Point> getAdjacdentCells(Point topLeft, Point botRight) {
+	/**
+	 * Gets the adjacent cells around a room in a random order
+	 * @param topLeft Top left position of room
+	 * @param botRight Bot right position of room
+	 * @return An ArrayList of Points that hold the coordinates to the adjacent cells of a given room
+	 */
+	private ArrayList<Point> getAdjacentCells(Point topLeft, Point botRight) {
 		ArrayList<Point> adjCells = new ArrayList<>();
 
 		if (topLeft.y > 0) {
@@ -320,11 +373,21 @@ public class GeneratedMap {
 	 * 
 	 * @param topLeft  Top left corner of the rectangle to be placed
 	 * @param botRight Bottom right corner of the rectangle to be placed
+	 * @param color Color of room
 	 * @return A new room that was placed at the given position
 	 */
 	private Room placeRoom(Point topLeft, Point botRight, Color color) {
 		fillGrid(topLeft, botRight, Cell.ROOM);
-		return new Room(topLeft, botRight, color);
+		Room room = new Room(topLeft, botRight, color);
+
+		for (int y = topLeft.y; y <= botRight.y; y++) {
+			for (int x = topLeft.x; x <= botRight.x; x++) {
+				mapRoomGrid[y][x] = room;
+			}
+		}
+	
+		fillGrid(topLeft, botRight, Cell.ROOM);
+		return room;
 	}
 
 	/**

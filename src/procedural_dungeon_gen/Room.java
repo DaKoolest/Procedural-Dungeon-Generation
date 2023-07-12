@@ -59,6 +59,17 @@ public class Room {
 	public void addConnectedRoom(Room otherRoom, Point entrancePoint, Direction dir) {
 		connectedRooms.add(new Doorway(otherRoom, entrancePoint, dir));
 	}
+
+	public boolean isConnectedToRoom(Room otherRoom) {
+
+		for (Doorway door: connectedRooms) {
+			if (door.connectingRoom == otherRoom) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 	
 	public ArrayList<Doorway> getDoors() {
 		return connectedRooms;
