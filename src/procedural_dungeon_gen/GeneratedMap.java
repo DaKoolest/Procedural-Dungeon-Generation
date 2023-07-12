@@ -2,6 +2,8 @@ package procedural_dungeon_gen;
 
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.Collections;
+
 import javax.swing.*;
 import procedural_dungeon_gen.Room.Direction;
 import java.awt.*;
@@ -90,11 +92,16 @@ public class GeneratedMap {
 	 */
 	public void generateMap() {
 		rooms = new ArrayList<>();
+
+		System.out.println("Generating empty cells");
 		// populates map with empty cells
 		createEmptyCells();
+		System.out.println("Finished generating empty cells");
 
+		System.out.println("Generating rooms");
 		// populates non-empty cells with rooms
 		createRooms();
+		System.out.println("Generating rooms");
 	}
 
 	/**
@@ -132,14 +139,10 @@ public class GeneratedMap {
 		Point topLeft = room.getTopLeftPos();
 		Point botRight = room.getBotRightPos();
 
+		for (Point adjPoint: getAdjacdentCells(room.getTopLeftPos(), room.getBotRightPos())) {
 
-		// handles generating rooms to the left of current room
-		if (topLeft.x > 0) {
-
-			// iterates through cells above room
-			for (int y = topLeft.y; y <= botRight.y; y++) {
-				
-				if (mapGrid[y][topLeft.x - 1].equals(Cell.PROCESSED)) {
+			if (adjPoint.x < topLeft.x) { // handles generating rooms to the left
+				if (mapGrid[adjPoint.y][topLeft.x - 1].equals(Cell.PROCESSED)) {
 					
 					Point newTopLeft = new Point(), newBotRight = new Point();
 					// if cell is processed -- meaning it's not empty or part of a room,
@@ -154,34 +157,27 @@ public class GeneratedMap {
 						int verticalOffset = rand.nextInt(newRoomHeight);
 
 						newTopLeft.x = topLeft.x - newRoomWidth;
-						newTopLeft.y = y - verticalOffset;
+						newTopLeft.y = adjPoint.y - verticalOffset;
 
 						newBotRight.x = topLeft.x - 1;
-						newBotRight.y = y + newRoomHeight - 1;
+						newBotRight.y = newTopLeft.y + newRoomHeight - 1;
 
 					} while (!canPlaceRoom(newTopLeft, newBotRight));
 
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x - 1, y), Direction.RIGHT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.LEFT);
+					newRoom.addConnectedRoom(room, new Point(topLeft.x - 1, adjPoint.y), Direction.RIGHT);
+					room.addConnectedRoom(newRoom, new Point(topLeft.x, adjPoint.y), Direction.LEFT);
 
 					rooms.add(newRoom);
 
 					// recursively places rooms around the new room
 					placeRoomsAround(newRoom);
 				}
-			}
-		}
 
-		// handles generating rooms to the right of current room
-		if (botRight.x < mapWidth - 1) {
-
-			// iterates through cells above room
-			for (int y = topLeft.y; y <= botRight.y; y++) {
-				
-				if (mapGrid[y][botRight.x + 1].equals(Cell.PROCESSED)) {
+			} else if (adjPoint.x > botRight.x) { // handles generating rooms to the right
+				if (mapGrid[adjPoint.y][botRight.x + 1].equals(Cell.PROCESSED)) {
 					
 					Point newTopLeft = new Point(), newBotRight = new Point();
 					// if cell is processed -- meaning it's not empty or part of a room,
@@ -196,34 +192,27 @@ public class GeneratedMap {
 						int verticalOffset = rand.nextInt(newRoomHeight);
 
 						newTopLeft.x = botRight.x + 1;
-						newTopLeft.y = y - verticalOffset;
+						newTopLeft.y = adjPoint.y - verticalOffset;
 
 						newBotRight.x = botRight.x + newRoomWidth;
-						newBotRight.y = y + newRoomHeight - 1;
+						newBotRight.y = newTopLeft.y + newRoomHeight - 1;
 
 					} while (!canPlaceRoom(newTopLeft, newBotRight));
 
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x + 1, y), Direction.LEFT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, y), Direction.RIGHT);
+					newRoom.addConnectedRoom(room, new Point(topLeft.x + 1, adjPoint.y), Direction.LEFT);
+					room.addConnectedRoom(newRoom, new Point(topLeft.x, adjPoint.y), Direction.RIGHT);
 
 					rooms.add(newRoom);
 
 					// recursively places rooms around the new room
 					placeRoomsAround(newRoom);
 				}
-			}
-		}
-		
-		// handles generating rooms above current room
-		if (topLeft.y > 0) {
 
-			// iterates through cells above room
-			for (int x = topLeft.x; x <= botRight.x; x++) {
-				
-				if (mapGrid[topLeft.y - 1][x].equals(Cell.PROCESSED)) {
+			} else if (adjPoint.y < topLeft.y) { // handles generating rooms above
+				if (mapGrid[topLeft.y - 1][adjPoint.x].equals(Cell.PROCESSED)) {
 					
 					Point newTopLeft = new Point(), newBotRight = new Point();
 					// if cell is processed -- meaning it's not empty or part of a room,
@@ -237,10 +226,10 @@ public class GeneratedMap {
 						
 						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
 
-						newTopLeft.x = x - horizontalOffset;
+						newTopLeft.x = adjPoint.x - horizontalOffset;
 						newTopLeft.y = topLeft.y - newRoomHeight;
 
-						newBotRight.x = x + newRoomWidth - 1;
+						newBotRight.x = newTopLeft.x + newRoomWidth - 1;
 						newBotRight.y = topLeft.y - 1;
 
 					} while (!canPlaceRoom(newTopLeft, newBotRight));
@@ -248,24 +237,16 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y - 1), Direction.DOWN);
-					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y), Direction.UP);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  topLeft.y - 1), Direction.DOWN);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  topLeft.y), Direction.UP);
 
 					rooms.add(newRoom);
 
 					// recursively places rooms around the new room
 					placeRoomsAround(newRoom);
 				}
-			}
-		}
-		
-		// handles generating rooms below current room
-		if (botRight.y < mapHeight - 1) {
-
-			// iterates through cells above room
-			for (int x = topLeft.x; x <= botRight.x; x++) {
-				
-				if (mapGrid[botRight.y + 1][x].equals(Cell.PROCESSED)) {
+			} else { // handles generting rooms below
+				if (mapGrid[botRight.y + 1][adjPoint.x].equals(Cell.PROCESSED)) {
 					
 					Point newTopLeft = new Point(), newBotRight = new Point();
 					// if cell is processed -- meaning it's not empty or part of a room,
@@ -279,10 +260,10 @@ public class GeneratedMap {
 						
 						int newRoomHeight = rand.nextInt(maxRoomHeight) + 1;
 
-						newTopLeft.x = x - horizontalOffset;
+						newTopLeft.x = adjPoint.x - horizontalOffset;
 						newTopLeft.y = botRight.y + 1;
 
-						newBotRight.x = x + newRoomWidth - 1;
+						newBotRight.x = newTopLeft.x + newRoomWidth - 1;
 						newBotRight.y = botRight.y + newRoomHeight;
 
 					} while (!canPlaceRoom(newTopLeft, newBotRight));
@@ -290,8 +271,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(x,  topLeft.y + 1), Direction.UP);
-					room.addConnectedRoom(newRoom, new Point(x,  topLeft.y), Direction.DOWN);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  topLeft.y + 1), Direction.UP);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  topLeft.y), Direction.DOWN);
 
 					rooms.add(newRoom);
 
@@ -300,7 +281,37 @@ public class GeneratedMap {
 				}
 			}
 		}
-		
+	}
+
+	private ArrayList<Point> getAdjacdentCells(Point topLeft, Point botRight) {
+		ArrayList<Point> adjCells = new ArrayList<>();
+
+		if (topLeft.y > 0) {
+			for (int x = topLeft.x; x <= botRight.x; x++) {
+				adjCells.add(new Point(x, topLeft.y - 1));
+			}
+		}
+
+		if (botRight.y < mapHeight - 1) {
+			for (int x = topLeft.x; x <= botRight.x; x++) {
+				adjCells.add(new Point(x, botRight.y + 1));
+			}
+		}
+
+		if (topLeft.x > 0) {
+			for (int y = topLeft.y; y <= botRight.y; y++) {
+				adjCells.add(new Point(topLeft.x - 1, y));
+			}
+		}
+
+		if (botRight.x < mapWidth - 1) {
+			for (int y = topLeft.y; y <= botRight.y; y++) {
+				adjCells.add(new Point(botRight.x + 1, y));
+			}
+		}
+
+		Collections.shuffle(adjCells, rand);
+		return adjCells;
 	}
 
 	/**
