@@ -2,7 +2,6 @@ package procedural_dungeon_gen;
 
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -118,7 +117,7 @@ public class GeneratedMap {
 			room1 = rooms.get(rand.nextInt(rooms.size()));
 		 	room2 = rooms.get(rand.nextInt(rooms.size()));
 			
-		} while (room1 == room2 || room1.getArea() != 1 || room2.getArea() != 1 || findShortestDistance(room1, room2) < 35);
+		} while (room1 == room2 || room1.getArea() != 1 || room2.getArea() != 1 || findShortestDistance(room1, room2) != 5);
 
 		System.out.println("Room 1 area:" + room1.getArea() + ", Room 2 area:" + room2.getArea());
 		room1.setColor(Color.GREEN);
@@ -152,7 +151,7 @@ public class GeneratedMap {
 		for (Room room: rooms) {
 			
 			// 20% chance to generate an extra doorway on a room
-			if (rand.nextFloat() < 0.2f) { 
+			if (rand.nextFloat() < 0.3f) { 
 				Point roomTopLeft = room.getTopLeftPos();
 				Point roomBotRight = room.getBotRightPos();
 				Iterator<Point> points = getAdjacentCells(roomTopLeft, roomBotRight).iterator();
@@ -229,8 +228,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x - 1, adjPoint.y), Direction.RIGHT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, adjPoint.y), Direction.LEFT);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x, adjPoint.y), Direction.RIGHT);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x + 1, adjPoint.y), Direction.LEFT);
 
 					rooms.add(newRoom);
 
@@ -264,8 +263,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(topLeft.x + 1, adjPoint.y), Direction.LEFT);
-					room.addConnectedRoom(newRoom, new Point(topLeft.x, adjPoint.y), Direction.RIGHT);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x, adjPoint.y), Direction.LEFT);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x - 1, adjPoint.y), Direction.RIGHT);
 
 					rooms.add(newRoom);
 
@@ -299,8 +298,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  topLeft.y - 1), Direction.DOWN);
-					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  topLeft.y), Direction.UP);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  adjPoint.y + 1), Direction.DOWN);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  adjPoint.y), Direction.UP);
 
 					rooms.add(newRoom);
 
@@ -333,8 +332,8 @@ public class GeneratedMap {
 					Room newRoom = placeRoom(newTopLeft, newBotRight, Color.RED);
 
 					// adds connections so that the rooms can be traversed
-					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  topLeft.y + 1), Direction.UP);
-					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  topLeft.y), Direction.DOWN);
+					newRoom.addConnectedRoom(room, new Point(adjPoint.x,  adjPoint.y - 1), Direction.UP);
+					room.addConnectedRoom(newRoom, new Point(adjPoint.x,  adjPoint.y), Direction.DOWN);
 
 					rooms.add(newRoom);
 
